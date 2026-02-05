@@ -1,33 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rose Day 🌹</title>
+<title>Rose Day ❤️</title>
 
 <style>
+
 body{
 margin:0;
-font-family:'Segoe UI',sans-serif;
-text-align:center;
+font-family:Segoe UI, sans-serif;
 background:linear-gradient(135deg,#ffe4ec,#fff0f5);
+text-align:center;
 overflow:hidden;
-}
-
-h1{
-color:#ff4d88;
-margin-top:20px;
+touch-action:none;
 }
 
 canvas{
 background:white;
 border-radius:20px;
 box-shadow:0 0 20px rgba(0,0,0,0.2);
-touch-action:none;
+margin-top:15px;
 }
 
+/* Toolbar */
 .toolbar{
-margin:15px;
+margin:10px;
 }
 
 button{
@@ -40,43 +38,39 @@ margin:5px;
 }
 
 input[type=color]{
-width:40px;
+width:45px;
 height:40px;
 border:none;
+border-radius:10px;
 }
 
-/* Popup */
-#popup{
+/* PAGE 2 */
+#heartPage{
+display:none;
 position:fixed;
 inset:0;
-background:rgba(0,0,0,0.5);
-display:flex;
+background:linear-gradient(135deg,#ffdde1,#ee9ca7);
 justify-content:center;
 align-items:center;
-opacity:0;
-pointer-events:none;
-transition:0.5s;
 }
 
-.card{
-background:rgba(255,255,255,0.6);
-backdrop-filter:blur(20px);
-padding:25px;
-border-radius:25px;
+.glass{
+background:rgba(255,255,255,0.25);
+backdrop-filter:blur(18px);
+padding:30px;
+border-radius:30px;
 width:85%;
-max-width:500px;
-}
-
-#message{
+max-width:520px;
+color:white;
 font-size:18px;
 line-height:1.6;
-white-space:pre-wrap;
 }
 
-.heart{
+.rose{
 position:fixed;
-font-size:20px;
-animation:float 6s linear infinite;
+bottom:-40px;
+font-size:22px;
+animation:float 7s linear infinite;
 }
 
 @keyframes float{
@@ -88,40 +82,40 @@ to{transform:translateY(-110vh);}
 </head>
 <body>
 
-<h1>Draw a Heart to Unlock 🌹</h1>
-
-<canvas id="canvas"></canvas>
+<h2>Draw A Heart To Unlock ❤️</h2>
 
 <div class="toolbar">
 <input type="color" id="colorPicker">
+<button onclick="useEraser()">Eraser</button>
 <button onclick="clearCanvas()">Clear</button>
-<button onclick="eraser()">Eraser</button>
 </div>
 
-<div id="popup">
-<div class="card">
-<h2>Yayyyy ❤️</h2>
-<p id="message"></p>
-</div>
+<canvas id="canvas"></canvas>
+
+<!-- PAGE 2 -->
+<div id="heartPage">
+<div class="glass" id="message"></div>
 </div>
 
 <audio id="music" loop>
-<source src="rose-music.mp3" type="audio/mpeg">
+<source src="yay.mp3">
 </audio>
 
 <script>
 
 const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
-const popup=document.getElementById("popup");
-const messageBox=document.getElementById("message");
+const heartPage=document.getElementById("heartPage");
 const music=document.getElementById("music");
+const messageBox=document.getElementById("message");
+const colorPicker=document.getElementById("colorPicker");
 
 let drawing=false;
 let points=[];
-let color="#ff4d88";
+let erasing=false;
+let currentColor="#ff0066";
 
-/* Resize Canvas */
+/* Resize */
 function resize(){
 canvas.width=window.innerWidth*0.9;
 canvas.height=window.innerHeight*0.45;
@@ -129,16 +123,15 @@ canvas.height=window.innerHeight*0.45;
 resize();
 window.addEventListener("resize",resize);
 
-/* Color Picker */
-document.getElementById("colorPicker").oninput=e=>{
-color=e.target.value;
-ctx.globalCompositeOperation="source-over";
-}
+/* Color */
+colorPicker.addEventListener("input",()=>{
+currentColor=colorPicker.value;
+erasing=false;
+});
 
 /* Eraser */
-function eraser(){
-ctx.globalCompositeOperation="destination-out";
-ctx.lineWidth=20;
+function useEraser(){
+erasing=true;
 }
 
 /* Clear */
@@ -147,71 +140,49 @@ ctx.clearRect(0,0,canvas.width,canvas.height);
 points=[];
 }
 
-/* GET POSITION */
-function getPos(e){
-const rect=canvas.getBoundingClientRect();
-
-if(e.touches){
-return{
-x:e.touches[0].clientX-rect.left,
-y:e.touches[0].clientY-rect.top
-};
-}else{
-return{
-x:e.clientX-rect.left,
-y:e.clientY-rect.top
-};
-}
-}
-
-/* START DRAW */
-function startDraw(e){
+/* DRAW */
+canvas.addEventListener("pointerdown",(e)=>{
 drawing=true;
 points=[];
 
-let pos=getPos(e);
+const rect=canvas.getBoundingClientRect();
 ctx.beginPath();
-ctx.moveTo(pos.x,pos.y);
-}
+ctx.moveTo(e.clientX-rect.left,e.clientY-rect.top);
+});
 
-/* DRAW */
-function draw(e){
+canvas.addEventListener("pointermove",(e)=>{
 if(!drawing) return;
 
-let pos=getPos(e);
-points.push(pos);
+const rect=canvas.getBoundingClientRect();
+let x=e.clientX-rect.left;
+let y=e.clientY-rect.top;
+
+points.push({x,y});
 
 ctx.lineWidth=5;
 ctx.lineCap="round";
-ctx.strokeStyle=color;
 
-ctx.lineTo(pos.x,pos.y);
-ctx.stroke();
+if(erasing){
+ctx.globalCompositeOperation="destination-out";
+}else{
+ctx.globalCompositeOperation="source-over";
+ctx.strokeStyle=currentColor;
 }
 
-/* STOP */
-function stopDraw(){
+ctx.lineTo(x,y);
+ctx.stroke();
+});
+
+canvas.addEventListener("pointerup",()=>{
 drawing=false;
 
-if(checkHeart()){
-unlock();
-}
-}
+if(checkHeart()) unlockHeart();
+});
 
-/* EVENTS */
-canvas.addEventListener("mousedown",startDraw);
-canvas.addEventListener("mousemove",draw);
-canvas.addEventListener("mouseup",stopDraw);
-canvas.addEventListener("mouseleave",stopDraw);
-
-canvas.addEventListener("touchstart",startDraw);
-canvas.addEventListener("touchmove",draw);
-canvas.addEventListener("touchend",stopDraw);
-
-/* HEART DETECTION */
+/* ❤️ Easier Heart Detection */
 function checkHeart(){
 
-if(points.length<60) return false;
+if(points.length < 80) return false;
 
 let xs=points.map(p=>p.x);
 let ys=points.map(p=>p.y);
@@ -219,35 +190,40 @@ let ys=points.map(p=>p.y);
 let width=Math.max(...xs)-Math.min(...xs);
 let height=Math.max(...ys)-Math.min(...ys);
 
-/* heart approx */
-return height > width*0.8;
+/* easier ratio */
+if(height < width*0.7) return false;
+
+/* ensure bottom tip exists */
+let bottomPoints=points.filter(p=>p.y > Math.min(...ys)+height*0.8);
+
+return bottomPoints.length > 10;
 }
 
-/* UNLOCK */
-function unlock(){
+/* Unlock */
+function unlockHeart(){
 
-popup.style.opacity="1";
-popup.style.pointerEvents="all";
+document.body.style.pointerEvents="none";
+heartPage.style.display="flex";
 
 music.play().catch(()=>{});
 
-confetti();
+startRoses();
 typeText();
 }
 
-/* Confetti */
-function confetti(){
+/* Floating roses */
+function startRoses(){
 setInterval(()=>{
-let h=document.createElement("div");
-h.className="heart";
-h.innerHTML="🌹";
-h.style.left=Math.random()*100+"vw";
-document.body.appendChild(h);
+let r=document.createElement("div");
+r.className="rose";
+r.innerHTML="🌹";
+r.style.left=Math.random()*100+"vw";
+document.body.appendChild(r);
 },400);
 }
 
 /* Typing Text */
-const text=`Happy Rose Day Kanishka 🌹
+const msg=`Happy Rose Day Kanishka 🌹
 
 To be honest…
 If i had to select A ROSE from the world,
@@ -274,10 +250,10 @@ let i=0;
 
 function typeText(){
 let interval=setInterval(()=>{
-messageBox.textContent+=text.charAt(i);
+messageBox.textContent+=msg.charAt(i);
 i++;
-if(i>=text.length) clearInterval(interval);
-},40);
+if(i>=msg.length) clearInterval(interval);
+},35);
 }
 
 </script>
