@@ -14,22 +14,18 @@ background:linear-gradient(135deg,#ffe4ec,#fff0f5);
 overflow:hidden;
 }
 
-/* Heading */
 h1{
 color:#ff4d88;
-font-size:7vw;
 margin-top:20px;
 }
 
-/* Canvas */
-#canvas{
+canvas{
 background:white;
 border-radius:20px;
-box-shadow:0 0 20px rgba(0,0,0,0.15);
+box-shadow:0 0 20px rgba(0,0,0,0.2);
 touch-action:none;
 }
 
-/* Toolbar */
 .toolbar{
 margin:15px;
 }
@@ -40,7 +36,6 @@ border:none;
 border-radius:12px;
 background:#ff4d88;
 color:white;
-font-size:14px;
 margin:5px;
 }
 
@@ -60,11 +55,11 @@ justify-content:center;
 align-items:center;
 opacity:0;
 pointer-events:none;
-transition:0.6s;
+transition:0.5s;
 }
 
 .card{
-background:rgba(255,255,255,0.5);
+background:rgba(255,255,255,0.6);
 backdrop-filter:blur(20px);
 padding:25px;
 border-radius:25px;
@@ -72,21 +67,19 @@ width:85%;
 max-width:500px;
 }
 
-/* Typing Text */
 #message{
-font-size:5vw;
-line-height:1.7;
+font-size:18px;
+line-height:1.6;
 white-space:pre-wrap;
 }
 
-/* Confetti hearts */
 .heart{
 position:fixed;
 font-size:20px;
-animation:floatUp 6s linear infinite;
+animation:float 6s linear infinite;
 }
 
-@keyframes floatUp{
+@keyframes float{
 from{transform:translateY(0);}
 to{transform:translateY(-110vh);}
 }
@@ -105,7 +98,6 @@ to{transform:translateY(-110vh);}
 <button onclick="eraser()">Eraser</button>
 </div>
 
-<!-- Popup -->
 <div id="popup">
 <div class="card">
 <h2>Yayyyy ❤️</h2>
@@ -119,34 +111,34 @@ to{transform:translateY(-110vh);}
 
 <script>
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const popup = document.getElementById("popup");
-const messageBox = document.getElementById("message");
-const music = document.getElementById("music");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const popup=document.getElementById("popup");
+const messageBox=document.getElementById("message");
+const music=document.getElementById("music");
 
 let drawing=false;
 let points=[];
 let color="#ff4d88";
 
-/* Responsive Canvas */
-function resizeCanvas(){
-canvas.width = window.innerWidth * 0.9;
-canvas.height = window.innerHeight * 0.45;
+/* Resize Canvas */
+function resize(){
+canvas.width=window.innerWidth*0.9;
+canvas.height=window.innerHeight*0.45;
 }
-resizeCanvas();
-window.addEventListener("resize",resizeCanvas);
+resize();
+window.addEventListener("resize",resize);
 
-/* Color */
-document.getElementById("colorPicker").oninput = e=>{
+/* Color Picker */
+document.getElementById("colorPicker").oninput=e=>{
 color=e.target.value;
 ctx.globalCompositeOperation="source-over";
-};
+}
 
 /* Eraser */
 function eraser(){
 ctx.globalCompositeOperation="destination-out";
-ctx.lineWidth=25;
+ctx.lineWidth=20;
 }
 
 /* Clear */
@@ -155,29 +147,38 @@ ctx.clearRect(0,0,canvas.width,canvas.height);
 points=[];
 }
 
-/* Drawing */
-canvas.addEventListener("touchstart",startDraw);
-canvas.addEventListener("touchmove",draw);
-canvas.addEventListener("touchend",stopDraw);
+/* GET POSITION */
+function getPos(e){
+const rect=canvas.getBoundingClientRect();
 
-function getTouchPos(e){
-let rect=canvas.getBoundingClientRect();
+if(e.touches){
 return{
-x:e.touches[0].clientX - rect.left,
-y:e.touches[0].clientY - rect.top
+x:e.touches[0].clientX-rect.left,
+y:e.touches[0].clientY-rect.top
+};
+}else{
+return{
+x:e.clientX-rect.left,
+y:e.clientY-rect.top
 };
 }
+}
 
+/* START DRAW */
 function startDraw(e){
 drawing=true;
 points=[];
+
+let pos=getPos(e);
 ctx.beginPath();
+ctx.moveTo(pos.x,pos.y);
 }
 
+/* DRAW */
 function draw(e){
 if(!drawing) return;
 
-let pos=getTouchPos(e);
+let pos=getPos(e);
 points.push(pos);
 
 ctx.lineWidth=5;
@@ -188,6 +189,7 @@ ctx.lineTo(pos.x,pos.y);
 ctx.stroke();
 }
 
+/* STOP */
 function stopDraw(){
 drawing=false;
 
@@ -196,23 +198,32 @@ unlock();
 }
 }
 
-/* HEART SHAPE CHECK */
+/* EVENTS */
+canvas.addEventListener("mousedown",startDraw);
+canvas.addEventListener("mousemove",draw);
+canvas.addEventListener("mouseup",stopDraw);
+canvas.addEventListener("mouseleave",stopDraw);
+
+canvas.addEventListener("touchstart",startDraw);
+canvas.addEventListener("touchmove",draw);
+canvas.addEventListener("touchend",stopDraw);
+
+/* HEART DETECTION */
 function checkHeart(){
 
-if(points.length < 60) return false;
+if(points.length<60) return false;
 
-/* Basic heart test: width + height + bottom point */
-let xs = points.map(p=>p.x);
-let ys = points.map(p=>p.y);
+let xs=points.map(p=>p.x);
+let ys=points.map(p=>p.y);
 
-let width = Math.max(...xs) - Math.min(...xs);
-let height = Math.max(...ys) - Math.min(...ys);
+let width=Math.max(...xs)-Math.min(...xs);
+let height=Math.max(...ys)-Math.min(...ys);
 
-/* Must be tall + curved */
-return height > width * 0.8;
+/* heart approx */
+return height > width*0.8;
 }
 
-/* Unlock */
+/* UNLOCK */
 function unlock(){
 
 popup.style.opacity="1";
@@ -220,12 +231,12 @@ popup.style.pointerEvents="all";
 
 music.play().catch(()=>{});
 
-startConfetti();
-typeMessage();
+confetti();
+typeText();
 }
 
-/* Confetti Hearts */
-function startConfetti(){
+/* Confetti */
+function confetti(){
 setInterval(()=>{
 let h=document.createElement("div");
 h.className="heart";
@@ -236,7 +247,7 @@ document.body.appendChild(h);
 }
 
 /* Typing Text */
-const text = `Happy Rose Day Kanishka 🌹
+const text=`Happy Rose Day Kanishka 🌹
 
 To be honest…
 If i had to select A ROSE from the world,
@@ -261,15 +272,14 @@ And thank you… meri hone ke liye ❤️`;
 
 let i=0;
 
-function typeMessage(){
+function typeText(){
 let interval=setInterval(()=>{
-messageBox.textContent += text.charAt(i);
+messageBox.textContent+=text.charAt(i);
 i++;
 if(i>=text.length) clearInterval(interval);
 },40);
 }
 
 </script>
-
 </body>
 </html>
