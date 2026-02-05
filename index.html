@@ -44,6 +44,28 @@ border:none;
 border-radius:10px;
 }
 
+/* Yay Popup */
+#yayPopup{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.5);
+display:flex;
+justify-content:center;
+align-items:center;
+opacity:0;
+pointer-events:none;
+transition:0.4s;
+z-index:10;
+}
+
+.yayCard{
+background:white;
+padding:30px;
+border-radius:25px;
+font-size:28px;
+color:#ff0066;
+}
+
 /* PAGE 2 */
 #heartPage{
 display:none;
@@ -66,6 +88,7 @@ font-size:18px;
 line-height:1.6;
 }
 
+/* Floating roses */
 .rose{
 position:fixed;
 bottom:-40px;
@@ -92,7 +115,12 @@ to{transform:translateY(-110vh);}
 
 <canvas id="canvas"></canvas>
 
-<!-- PAGE 2 -->
+<!-- Yay Popup -->
+<div id="yayPopup">
+<div class="yayCard">Yayyyyy ❤️</div>
+</div>
+
+<!-- Page 2 -->
 <div id="heartPage">
 <div class="glass" id="message"></div>
 </div>
@@ -109,6 +137,7 @@ const heartPage=document.getElementById("heartPage");
 const music=document.getElementById("music");
 const messageBox=document.getElementById("message");
 const colorPicker=document.getElementById("colorPicker");
+const yayPopup=document.getElementById("yayPopup");
 
 let drawing=false;
 let points=[];
@@ -122,6 +151,14 @@ canvas.height=window.innerHeight*0.45;
 }
 resize();
 window.addEventListener("resize",resize);
+
+/* Unlock mobile audio */
+document.addEventListener("pointerdown",()=>{
+music.play().then(()=>{
+music.pause();
+music.currentTime=0;
+}).catch(()=>{});
+},{once:true});
 
 /* Color */
 colorPicker.addEventListener("input",()=>{
@@ -140,7 +177,7 @@ ctx.clearRect(0,0,canvas.width,canvas.height);
 points=[];
 }
 
-/* DRAW */
+/* Drawing */
 canvas.addEventListener("pointerdown",(e)=>{
 drawing=true;
 points=[];
@@ -179,10 +216,10 @@ drawing=false;
 if(checkHeart()) unlockHeart();
 });
 
-/* ❤️ Easier Heart Detection */
+/* Easier Heart Detection */
 function checkHeart(){
 
-if(points.length < 80) return false;
+if(points.length < 70) return false;
 
 let xs=points.map(p=>p.x);
 let ys=points.map(p=>p.y);
@@ -190,28 +227,40 @@ let ys=points.map(p=>p.y);
 let width=Math.max(...xs)-Math.min(...xs);
 let height=Math.max(...ys)-Math.min(...ys);
 
-/* easier ratio */
-if(height < width*0.7) return false;
+if(height < width*0.6) return false;
 
-/* ensure bottom tip exists */
-let bottomPoints=points.filter(p=>p.y > Math.min(...ys)+height*0.8);
+let bottomPoints=points.filter(p=>p.y > Math.min(...ys)+height*0.75);
 
-return bottomPoints.length > 10;
+return bottomPoints.length > 8;
 }
 
 /* Unlock */
 function unlockHeart(){
 
-document.body.style.pointerEvents="none";
-heartPage.style.display="flex";
+/* Show Yay Popup */
+yayPopup.style.opacity="1";
+yayPopup.style.pointerEvents="all";
 
+/* Start music */
+music.currentTime=0;
 music.play().catch(()=>{});
+
+/* After delay open page 2 */
+setTimeout(()=>{
+
+yayPopup.style.opacity="0";
+yayPopup.style.pointerEvents="none";
+
+heartPage.style.display="flex";
 
 startRoses();
 typeText();
+
+},2500);
+
 }
 
-/* Floating roses */
+/* Roses animation */
 function startRoses(){
 setInterval(()=>{
 let r=document.createElement("div");
